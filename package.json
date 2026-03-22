@@ -1,27 +1,24 @@
 {
-  "name": "claude-code-wechat-channel",
-  "version": "0.2.0",
-  "description": "Claude Code Channel plugin for WeChat — bridge WeChat messages into Claude Code sessions via the official ilink API",
+  "name": "codex-wechat-bridge",
+  "version": "0.1.0",
+  "description": "Bridge WeChat ClawBot messages into Codex conversations through the official ilink API.",
   "type": "module",
   "bin": {
-    "claude-code-wechat-channel": "./cli.mjs"
+    "codex-wechat-bridge": "./cli.mjs"
   },
   "files": [
     "cli.mjs",
-    "dist/",
+    "bridge.mjs",
+    "setup.mjs",
+    "lib/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "bun build wechat-channel.ts --target node --outfile dist/wechat-channel.js && bun build setup.ts --target node --outfile dist/setup.js",
-    "prepublishOnly": "npm run build"
+    "start": "node ./bridge.mjs --workspace ."
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
     "qrcode-terminal": "^0.12.0"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
   },
   "engines": {
     "node": ">=18"
@@ -29,14 +26,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Johnixr/claude-code-wechat-channel.git"
+    "url": "https://github.com/shyboy/codex-wechat-bridge.git"
   },
   "keywords": [
-    "claude-code",
+    "codex",
     "wechat",
-    "mcp",
-    "channel",
     "clawbot",
-    "ai-agent"
+    "bridge",
+    "agent"
   ]
 }

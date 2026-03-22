@@ -1,121 +1,62 @@
 #!/usr/bin/env node
 
-/**
- * Claude Code WeChat Channel — CLI entry point
- *
- * Usage:
- *   npx claude-code-wechat-channel setup   — WeChat QR login
- *   npx claude-code-wechat-channel start   — Start channel server (used by .mcp.json)
- *   npx claude-code-wechat-channel install — Write .mcp.json to current directory
- */
-
-import { execSync, spawnSync } from "node:child_process";
-import { existsSync, writeFileSync, readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DIST_DIR = resolve(__dirname, "dist");
-
-function getBunPath() {
-  try {
-    return execSync("which bun", { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
-  } catch {
-    return null;
-  }
-}
-
-function getNodePath() {
-  return process.execPath;
-}
 
 function runScript(script, args = []) {
-  const scriptPath = resolve(DIST_DIR, script);
+  const scriptPath = resolve(__dirname, script);
   if (!existsSync(scriptPath)) {
-    console.error(`Error: ${scriptPath} not found. Package may be corrupted.`);
+    console.error(`Missing script: ${scriptPath}`);
     process.exit(1);
   }
 
-  // Prefer bun for performance, fall back to node
-  const bun = getBunPath();
-  const runtime = bun || getNodePath();
-  const result = spawnSync(runtime, [scriptPath, ...args], {
+  const result = spawnSync(process.execPath, [scriptPath, ...args], {
     stdio: "inherit",
     env: process.env,
   });
+
   process.exit(result.status ?? 1);
-}
-
-function install() {
-  const mcpConfig = {
-    mcpServers: {
-      wechat: {
-        command: "npx",
-        args: ["-y", "claude-code-wechat-channel", "start"],
-      },
-    },
-  };
-
-  const mcpPath = resolve(process.cwd(), ".mcp.json");
-
-  if (existsSync(mcpPath)) {
-    try {
-      const existing = JSON.parse(readFileSync(mcpPath, "utf-8"));
-      existing.mcpServers = existing.mcpServers || {};
-      existing.mcpServers.wechat = mcpConfig.mcpServers.wechat;
-      writeFileSync(mcpPath, JSON.stringify(existing, null, 2) + "\n", "utf-8");
-      console.log(`Updated: ${mcpPath}`);
-    } catch {
-      writeFileSync(mcpPath, JSON.stringify(mcpConfig, null, 2) + "\n", "utf-8");
-      console.log(`Created: ${mcpPath}`);
-    }
-  } else {
-    writeFileSync(mcpPath, JSON.stringify(mcpConfig, null, 2) + "\n", "utf-8");
-    console.log(`Created: ${mcpPath}`);
-  }
-
-  console.log(`
-Next steps:
-  1. Run: npx claude-code-wechat-channel setup
-  2. Then: claude --dangerously-load-development-channels server:wechat
-`);
 }
 
 function help() {
   console.log(`
-  Claude Code WeChat Channel
+Codex WeChat Bridge
 
-  Usage: npx claude-code-wechat-channel <command>
+Usage: npx codex-wechat-bridge <command> [options]
 
-  Commands:
-    setup     WeChat QR login (scan to authenticate)
-    start     Start the channel MCP server
-    install   Write .mcp.json to current directory
-    help      Show this help message
+Commands:
+  setup     Scan WeChat QR code and save ilink credentials
+  start     Start the Codex bridge loop
+  help      Show this help message
+
+Examples:
+  npx codex-wechat-bridge setup
+  npx codex-wechat-bridge start --workspace E:\\projects\\my-app
+  npx codex-wechat-bridge start --workspace . --model gpt-5.4 --full-auto
 `);
 }
 
-const command = process.argv[2];
+const [command, ...args] = process.argv.slice(2);
 
 switch (command) {
   case "setup":
-    runScript("setup.js");
+    runScript("setup.mjs", args);
     break;
   case "start":
-    runScript("wechat-channel.js");
-    break;
-  case "install":
-    install();
+    runScript("bridge.mjs", args);
     break;
   case "help":
-  case "--help":
   case "-h":
+  case "--help":
+  case undefined:
     help();
     break;
   default:
-    if (command) {
-      console.error(`Unknown command: ${command}`);
-    }
+    console.error(`Unknown command: ${command}`);
     help();
-    process.exit(command ? 1 : 0);
+    process.exit(1);
 }
