@@ -2,7 +2,7 @@
 
 把微信 ClawBot 的消息转发给 Codex，再把 Codex 的回复发回微信。
 
-这个项目的目标很直接：
+你可以把它理解成一个“微信 <-> Codex”的桥接器：
 
 - 你在微信里发消息
 - 电脑上的桥接程序收到消息
@@ -15,6 +15,38 @@
 - 你想在微信里直接和 Codex 聊天
 - 你想让 Codex 基于某个本地项目目录回答问题、看代码、改代码
 
+## 先说最重要的一点
+
+**截至 2026-03-23，这个项目还没有发布到 npm。**
+
+所以这条命令：
+
+```bash
+npx codex-wechat-bridge setup
+```
+
+**现在不能直接用。**
+
+你需要先把仓库下载到本地，然后在项目目录里运行本地命令。
+
+正确做法是：
+
+```bash
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
+npm install
+node ./cli.mjs setup
+```
+
+如果你是 Windows PowerShell，也可以这样：
+
+```powershell
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
+npm install
+node .\cli.mjs setup
+```
+
 ## 这个项目借鉴了什么
 
 这个项目不是从零开始发明协议，而是在已有项目基础上做了改造。
@@ -26,7 +58,7 @@
   - 本项目最初就是从它的代码结构改过来的
   - 保留并复用了它对微信 `ilink` 登录、收消息、发消息这一部分的整体思路
 - `@tencent-weixin/openclaw-weixin`
-  - 上游项目 README 明确说明它使用的是和这个官方/半官方生态项目一致的 `ilink` 协议
+  - 上游项目 README 明确说明它使用的是和这个生态项目一致的 `ilink` 协议
   - 本项目也沿用了同一套微信侧协议能力
 
 本项目和上游的核心区别：
@@ -127,23 +159,59 @@ macOS / Linux 例子：
 
 如果你只想先跑起来，不想研究参数，按下面做。
 
-### 第 1 步：打开终端
+### 第 1 步：下载代码到本地
 
-Windows 可以用：
+你有两种办法。
 
-- PowerShell
-- Windows Terminal
-- CMD
+#### 方法 A：用 Git 下载
 
-### 第 2 步：扫码登录微信桥接
-
-执行：
+如果你装了 Git，执行：
 
 ```bash
-npx codex-wechat-bridge setup
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
 ```
 
-第一次运行时，`npx` 可能会自动下载这个包，等它跑完就行。
+#### 方法 B：直接下载 ZIP
+
+如果你不会 Git，也可以：
+
+1. 打开仓库页面  
+   [https://github.com/shyboy/codex-wechat-bridge](https://github.com/shyboy/codex-wechat-bridge)
+2. 点击绿色 `Code` 按钮
+3. 点击 `Download ZIP`
+4. 解压到你电脑上的一个文件夹
+5. 用终端进入这个文件夹
+
+例如在 Windows PowerShell 里：
+
+```powershell
+cd E:\Desktop\codex-wechat-bridge
+```
+
+### 第 2 步：安装依赖
+
+进入项目目录后，执行：
+
+```bash
+npm install
+```
+
+这一步会安装项目需要的依赖，比如终端二维码显示组件。
+
+### 第 3 步：扫码登录微信桥接
+
+在项目目录里执行：
+
+```bash
+node ./cli.mjs setup
+```
+
+Windows PowerShell 里也可以写成：
+
+```powershell
+node .\cli.mjs setup
+```
 
 然后你会看到二维码。
 
@@ -161,23 +229,29 @@ npx codex-wechat-bridge setup
 
 你不用手动改这个文件。
 
-### 第 3 步：启动桥接程序
+### 第 4 步：启动桥接程序
 
-执行：
+在项目目录里执行：
 
 ```bash
-npx codex-wechat-bridge start --workspace .
+node ./cli.mjs start --workspace .
+```
+
+Windows PowerShell 里：
+
+```powershell
+node .\cli.mjs start --workspace .
 ```
 
 如果你已经在自己的项目目录里打开了终端，那么 `.` 就表示“当前文件夹”。
 
-如果你不在项目目录里，就把它改成具体路径，例如：
+如果你想让它针对另一个目录工作，就把 `.` 换成真实路径，例如：
 
 ```powershell
-npx codex-wechat-bridge start --workspace E:\Desktop\my-project
+node .\cli.mjs start --workspace E:\Desktop\my-project
 ```
 
-### 第 4 步：看到这句就表示基本启动成功
+### 第 5 步：看到这句就表示基本启动成功
 
 终端里应该能看到类似：
 
@@ -187,7 +261,7 @@ npx codex-wechat-bridge start --workspace E:\Desktop\my-project
 
 这表示程序已经在等微信消息了。
 
-### 第 5 步：去微信里发一条消息
+### 第 6 步：去微信里发一条消息
 
 比如发：
 
@@ -202,7 +276,13 @@ npx codex-wechat-bridge start --workspace E:\Desktop\my-project
 如果你担心 Codex 乱改文件，建议一开始用只读模式：
 
 ```bash
-npx codex-wechat-bridge start --workspace . --sandbox read-only
+node ./cli.mjs start --workspace . --sandbox read-only
+```
+
+Windows PowerShell：
+
+```powershell
+node .\cli.mjs start --workspace . --sandbox read-only
 ```
 
 这样更安全。
@@ -210,13 +290,13 @@ npx codex-wechat-bridge start --workspace . --sandbox read-only
 只有在你明确希望 Codex 帮你修改代码时，再考虑：
 
 ```bash
-npx codex-wechat-bridge start --workspace . --sandbox workspace-write
+node ./cli.mjs start --workspace . --sandbox workspace-write
 ```
 
 如果你已经非常确定自己的使用场景，再考虑：
 
 ```bash
-npx codex-wechat-bridge start --workspace . --full-auto
+node ./cli.mjs start --workspace . --full-auto
 ```
 
 ## 常用命令
@@ -224,19 +304,19 @@ npx codex-wechat-bridge start --workspace . --full-auto
 ### 微信扫码登录
 
 ```bash
-npx codex-wechat-bridge setup
+node ./cli.mjs setup
 ```
 
 ### 启动桥接
 
 ```bash
-npx codex-wechat-bridge start --workspace /path/to/your/project
+node ./cli.mjs start --workspace /path/to/your/project
 ```
 
 ### 查看帮助
 
 ```bash
-npx codex-wechat-bridge help
+node ./cli.mjs help
 ```
 
 ## 常用参数说明
@@ -300,8 +380,11 @@ npx codex-wechat-bridge help
 如果你是 Windows 用户，在某个项目目录里打开 PowerShell，可以这样：
 
 ```powershell
-npx codex-wechat-bridge setup
-npx codex-wechat-bridge start --workspace E:\Desktop\openclaw\codex-wechat-bridge --sandbox read-only
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
+npm install
+node .\cli.mjs setup
+node .\cli.mjs start --workspace E:\Desktop\openclaw\codex-wechat-bridge --sandbox read-only
 ```
 
 如果你只是想聊天测试，可以先建一个空目录，然后：
@@ -309,7 +392,10 @@ npx codex-wechat-bridge start --workspace E:\Desktop\openclaw\codex-wechat-bridg
 ```powershell
 mkdir E:\codex-test
 cd E:\codex-test
-npx codex-wechat-bridge start --workspace . --sandbox read-only
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
+npm install
+node .\cli.mjs start --workspace . --sandbox read-only
 ```
 
 ## 这个项目会在你的电脑上保存什么
@@ -332,12 +418,31 @@ npx codex-wechat-bridge start --workspace . --sandbox read-only
 如果你想重新登录，可以删掉 `account.json` 后重新运行：
 
 ```bash
-npx codex-wechat-bridge setup
+node ./cli.mjs setup
 ```
 
 ## 常见问题
 
-### 1. 终端提示找不到 `codex`
+### 1. 不需要把代码下载到本地吗？
+
+**需要。**
+
+因为这个项目现在还没有发布到 npm，所以不能直接写：
+
+```bash
+npx codex-wechat-bridge setup
+```
+
+当前正确流程是：
+
+```bash
+git clone https://github.com/shyboy/codex-wechat-bridge.git
+cd codex-wechat-bridge
+npm install
+node ./cli.mjs setup
+```
+
+### 2. 终端提示找不到 `codex`
 
 说明 Codex CLI 没装好，或者不在环境变量里。
 
@@ -349,15 +454,15 @@ codex --version
 
 如果这条命令都不通，先把 Codex CLI 装好。
 
-### 2. 终端提示没有微信凭据
+### 3. 终端提示没有微信凭据
 
 先执行：
 
 ```bash
-npx codex-wechat-bridge setup
+node ./cli.mjs setup
 ```
 
-### 3. 扫码之后还是没反应
+### 4. 扫码之后还是没反应
 
 检查下面几项：
 
@@ -366,7 +471,7 @@ npx codex-wechat-bridge setup
 - 电脑网络是否正常
 - 终端有没有报错
 
-### 4. 微信发消息了，但没有收到回复
+### 5. 微信发消息了，但没有收到回复
 
 先看桥接终端有没有这些信息：
 
@@ -383,7 +488,7 @@ npx codex-wechat-bridge setup
 - 网络问题
 - 微信侧 `context_token` 异常
 
-### 5. 为什么回复有时候比较慢
+### 6. 为什么回复有时候比较慢
 
 因为中间真的调用了一次 Codex。
 
@@ -394,7 +499,7 @@ npx codex-wechat-bridge setup
 - 问题复杂度
 - 当前 workspace 大小
 
-### 6. 它会不会自动改我的代码
+### 7. 它会不会自动改我的代码
 
 看你怎么启动。
 
@@ -414,14 +519,14 @@ npx codex-wechat-bridge setup
 
 那它就可能修改工作目录里的文件。
 
-### 7. 我只是想把它当微信聊天机器人，不想碰代码
+### 8. 我只是想把它当微信聊天机器人，不想碰代码
 
 可以。
 
 你只要给它一个普通空目录，并用只读模式启动就行：
 
 ```bash
-npx codex-wechat-bridge start --workspace . --sandbox read-only
+node ./cli.mjs start --workspace . --sandbox read-only
 ```
 
 ## 已知限制
